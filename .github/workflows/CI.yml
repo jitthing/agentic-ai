@@ -1,0 +1,105 @@
+name: CI for Agentic-AI App
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # 1. Lint & format
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install linters
+        run: pip install black flake8
+      - name: Black (format check)
+        run: black --check .
+      - name: Flake8 (style)
+        run: flake8 .
+
+  # 2. Type-check
+  types:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with: {python-version: '3.x'}
+      - run: pip install mypy
+      - name: Mypy
+        run: mypy .
+
+  # 3. Security lint: Bandit
+  bandit:
+    runs-on: ubuntu-latest
+    needs: types
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with: {python-version: '3.x'}
+      - run: pip install bandit
+      - name: Bandit security scan
+        run: bandit -r src/
+
+  # 4. Dependency review (GitHub’s built-in)
+  dependency-review:
+    runs-on: ubuntu-latest
+    needs: bandit
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v2
+
+  # 5. Snyk vulnerability scan
+  snyk:
+    runs-on: ubuntu-latest
+    needs: dependency-review
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --sarif-file-output=snyk.sarif
+      - name: Upload Snyk SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
+
+  # 6. CodeQL deep scan
+  codeql:
+    runs-on: ubuntu-latest
+    needs: snyk
+    steps:
+      - uses: actions/checkout@v3
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+      - name: Build
+        run: pip install -r requirements.txt
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  # 7. Unit tests & coverage
+  # test:
+  #   runs-on: ubuntu-latest
+  #   needs: codeql
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-python@v4
+  #       with: {python-version: '3.x'}
+  #     - run: pip install -r requirements.txt pytest coverage coverage-badge
+  #     - name: Run tests with coverage
+  #       run: |
+  #         coverage run -m pytest
+  #         coverage report
+  #     - name: Upload coverage badge
+  #       run: coverage-badge -o coverage.svg
