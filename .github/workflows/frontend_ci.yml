@@ -1,0 +1,58 @@
+name: Frontend CI for Career Compass
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - "frontend/**" # Trigger only when changes are made in the frontend directory or its subdirectories
+      - ".github/workflows/frontend_ci.yml" # Also trigger if the workflow file itself changes
+  pull_request:
+    branches:
+      - main # Or your default branch
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend_ci.yml"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Or your preferred runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18" # Specify your Node.js version
+          cache: "npm" # Or 'yarn', 'pnpm'
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend # Run commands from the frontend directory
+        run: |
+          npm ci # Use npm ci for clean installs in CI
+
+      - name: Run Linters (Frontend)
+        working-directory: ./frontend
+        run: |
+          # Example using ESLint (assuming it's in dev dependencies)
+          npm run lint
+
+      #   - name: Run Tests (Frontend)
+      #     working-directory: ./frontend
+      #     run: |
+      #       # Example using Jest or React Testing Library (assuming it's in dev dependencies)
+      #       npm run test --ci # Use --ci flag for CI environments
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm run build # Build the production-ready frontend assets
+
+    # Optional: Upload build artifacts
+    # - name: Upload build artifact
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: frontend-build
+    #     path: frontend/build # Adjust path based on your build output directory

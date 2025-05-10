@@ -1,9 +1,18 @@
-name: CI for Agentic-AI App
+name: Backend CI for Career Compass
 
 on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - "backend/**" # Trigger only when changes are made in the backend directory or its subdirectories
+      - ".github/workflows/backend_ci.yml" # Also trigger if the workflow file itself changes
   pull_request:
     branches:
-      - main
+      - main # Or your default branch
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend_ci.yml"
 
 jobs:
   # 1. Lint & format
@@ -14,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
       - name: Install linters
         run: pip install black flake8
       - name: Black (format check)
@@ -29,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
-        with: {python-version: '3.x'}
+        with: { python-version: "3.x" }
       - run: pip install mypy
       - name: Mypy
         run: mypy .
@@ -41,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
-        with: {python-version: '3.x'}
+        with: { python-version: "3.x" }
       - run: pip install bandit
       - name: Bandit security scan
         run: bandit -r src/
