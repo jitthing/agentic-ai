@@ -1,5 +1,4 @@
-# agentic-ai
-
+# Career Compass
 Personal project to learn about agentic AI workflows
 
 ## Prerequisites
