@@ -59,6 +59,7 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest
     needs: bandit
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
     steps:
       - uses: actions/checkout@v3
       - name: Dependency Review
@@ -67,7 +68,7 @@ jobs:
   # 5. Snyk vulnerability scan
   snyk:
     runs-on: ubuntu-latest
-    needs: dependency-review
+    # needs: dependency-review
     steps:
       - uses: actions/checkout@v3
       - name: Run Snyk to check for vulnerabilities
