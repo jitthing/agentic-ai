@@ -61,3 +61,10 @@ career-compass/
 ├── requirements.txt             # Project dependencies
 └── README.md                    # Project documentation
 ```
+
+Each agent module would have:
+
+Clear API boundaries
+Independent RAG implementation
+Separate configuration
+Well-defined inputs/outputs
